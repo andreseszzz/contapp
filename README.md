@@ -101,9 +101,10 @@ Servicios externos:
 3. Crea un proyecto llamado `contapp` y anota la contraseña de base de datos.
 4. Ve a **Project Settings > API** y copia:
    - `Project URL`
-   - `anon public` key
+   - `anon public` key (JWT, NO el publishable key)
    - `service_role secret` key
 5. Ve al botón **Connect > Shared Pooler > Session mode** y copia la connection string de PostgreSQL (IPv4).
+6. Después de correr la primera migración, las políticas RLS se crean automáticamente en la base de datos.
 
 ### 2. Configurar variables de entorno
 
@@ -283,6 +284,7 @@ contapp/
 4. El frontend almacena el token y lo envía en el header `Authorization: Bearer <token>`.
 5. El backend valida el JWT y crea/lee el perfil del usuario en PostgreSQL.
 6. Todas las rutas protegidas usan la dependencia `get_current_user`.
+7. Todas las tablas de negocio (`users`, `clients`, `products`, `invoices`, `invoice_items`) tienen **RLS activado** con políticas que permiten a cada usuario solo acceder a sus propios datos cuando se usa la API REST de Supabase.
 
 ---
 

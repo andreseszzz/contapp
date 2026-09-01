@@ -20,7 +20,9 @@
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "welcome": "Welcome to Contapp",
-    "subtitle": "Colombian accounting software integrated with Factus"
+    "subtitle": "Colombian accounting software integrated with Factus",
+    "checkEmail": "Please check your email to confirm your account. Then you can log in.",
+    "confirmRequired": "Confirmation required"
   },
   "dashboard": {
     "title": "Dashboard",

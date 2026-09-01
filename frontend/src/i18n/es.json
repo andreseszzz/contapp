@@ -20,7 +20,9 @@
     "noAccount": "¿No tienes cuenta?",
     "hasAccount": "¿Ya tienes cuenta?",
     "welcome": "Bienvenido a Contapp",
-    "subtitle": "Software contable colombiano integrado con Factus"
+    "subtitle": "Software contable colombiano integrado con Factus",
+    "checkEmail": "Revisa tu correo electrónico para confirmar tu cuenta. Luego podrás iniciar sesión.",
+    "confirmRequired": "Confirmación requerida"
   },
   "dashboard": {
     "title": "Panel",

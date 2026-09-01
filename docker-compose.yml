@@ -11,19 +11,32 @@ services:
       - "8000:8000"
     networks:
       - contapp-network
+    dns:
+      - 127.0.0.11
+      - 8.8.8.8
+      - 1.1.1.1
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
     container_name: contapp-frontend
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "80:80"
     depends_on:
       - backend
     networks:
       - contapp-network
+    dns:
+      - 127.0.0.11
+      - 8.8.8.8
+      - 1.1.1.1
 
 networks:
   contapp-network:

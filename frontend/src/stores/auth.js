@@ -23,7 +23,12 @@ export const useAuthStore = defineStore('auth', () => {
         options: { data: { full_name: fullName } },
       })
       if (error) throw error
-      return await syncSession(data.session)
+      // Supabase may require email confirmation, so a session is not always available.
+      // If a session exists, sync it; otherwise signal that confirmation is needed.
+      if (data.session) {
+        return await syncSession(data.session)
+      }
+      return { confirmationRequired: true }
     } finally {
       loading.value = false
     }
