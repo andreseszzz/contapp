@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "products": "Products",
+    "invoices": "Invoices",
+    "newInvoice": "New Invoice",
+    "reports": "Reports",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "language": "Language"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full name",
+    "login": "Log in",
+    "register": "Create account",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "welcome": "Welcome to Contapp",
+    "subtitle": "Colombian accounting software integrated with Factus"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "totalSales": "Total sales",
+    "totalTax": "Total tax",
+    "invoices": "Invoices",
+    "clients": "Clients",
+    "products": "Products"
+  },
+  "clients": {
+    "title": "Clients",
+    "new": "New client",
+    "identification": "Identification",
+    "company": "Company",
+    "tradeName": "Trade name",
+    "address": "Address",
+    "email": "Email",
+    "phone": "Phone",
+    "save": "Save client",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "products": {
+    "title": "Products",
+    "new": "New product",
+    "code": "Code",
+    "name": "Name",
+    "price": "Price",
+    "taxRate": "Tax rate",
+    "save": "Save product",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "new": "New invoice",
+    "reference": "Reference",
+    "client": "Client",
+    "status": "Status",
+    "total": "Total",
+    "emit": "Emit",
+    "draft": "Draft",
+    "validated": "Validated",
+    "rejected": "Rejected",
+    "items": "Items",
+    "addItem": "Add item",
+    "quantity": "Quantity",
+    "discount": "Discount",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "create": "Create invoice"
+  },
+  "reports": {
+    "title": "Reports",
+    "salesSummary": "Sales summary",
+    "taxes": "Taxes (IVA)",
+    "accountsReceivable": "Accounts receivable",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "generate": "Generate"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "actions": "Actions"
+  }
+}

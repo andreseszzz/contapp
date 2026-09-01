@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "clients": "Clientes",
+    "products": "Productos",
+    "invoices": "Facturas",
+    "newInvoice": "Nueva factura",
+    "reports": "Reportes",
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión",
+    "language": "Idioma"
+  },
+  "auth": {
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "fullName": "Nombre completo",
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "welcome": "Bienvenido a Contapp",
+    "subtitle": "Software contable colombiano integrado con Factus"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Bienvenido de nuevo",
+    "totalSales": "Ventas totales",
+    "totalTax": "Impuestos totales",
+    "invoices": "Facturas",
+    "clients": "Clientes",
+    "products": "Productos"
+  },
+  "clients": {
+    "title": "Clientes",
+    "new": "Nuevo cliente",
+    "identification": "Identificación",
+    "company": "Empresa",
+    "tradeName": "Nombre comercial",
+    "address": "Dirección",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "save": "Guardar cliente",
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+  "products": {
+    "title": "Productos",
+    "new": "Nuevo producto",
+    "code": "Código",
+    "name": "Nombre",
+    "price": "Precio",
+    "taxRate": "Tasa de impuesto",
+    "save": "Guardar producto",
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+  "invoices": {
+    "title": "Facturas",
+    "new": "Nueva factura",
+    "reference": "Referencia",
+    "client": "Cliente",
+    "status": "Estado",
+    "total": "Total",
+    "emit": "Emitir",
+    "draft": "Borrador",
+    "validated": "Validada",
+    "rejected": "Rechazada",
+    "items": "Ítems",
+    "addItem": "Agregar ítem",
+    "quantity": "Cantidad",
+    "discount": "Descuento",
+    "subtotal": "Subtotal",
+    "tax": "Impuesto",
+    "create": "Crear factura"
+  },
+  "reports": {
+    "title": "Reportes",
+    "salesSummary": "Resumen de ventas",
+    "taxes": "Impuestos (IVA)",
+    "accountsReceivable": "Cuentas por cobrar",
+    "startDate": "Fecha inicial",
+    "endDate": "Fecha final",
+    "generate": "Generar"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "search": "Buscar",
+    "actions": "Acciones"
+  }
+}
