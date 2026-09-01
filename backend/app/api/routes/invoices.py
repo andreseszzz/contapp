@@ -8,7 +8,7 @@ from app.models.invoice import Invoice, InvoiceItem
 from app.models.product import Product
 from app.models.client import Client
 from app.schemas.invoice import InvoiceCreate, InvoiceResponse, InvoiceEmitResponse
-from app.services.factus_service import get_factus_service
+from app.services.factus_service import get_factus_service, FactusAPIError, FactusAuthError
 
 router = APIRouter()
 
@@ -129,6 +129,89 @@ def get_invoice(
     return invoice
 
 
+def _build_customer_payload(client: Client) -> dict:
+    customer = {
+        "identification_document_code": client.identification_document_code,
+        "identification": client.identification,
+        "legal_organization_code": client.legal_organization_code,
+        "tribute_code": client.tribute_code or "ZZ",
+        "responsibilities": ["R-99-PN"],
+        "country_code": "CO",
+    }
+
+    if client.company:
+        customer["company"] = client.company
+    if client.trade_name:
+        customer["trade_name"] = client.trade_name
+    if client.address:
+        customer["address"] = client.address
+    if client.email:
+        customer["email"] = client.email
+    if client.phone:
+        customer["phone"] = client.phone
+    if client.municipality_code:
+        customer["municipality_code"] = client.municipality_code
+
+    return customer
+
+
+def _build_items_payload(items: List[InvoiceItem]) -> List[dict]:
+    payload_items = []
+    for item in items:
+        payload_items.append({
+            "code_reference": item.code_reference,
+            "name": item.name,
+            "quantity": f"{item.quantity:.2f}",
+            "discount_rate": f"{item.discount_rate:.2f}",
+            "price": f"{item.price:.2f}",
+            "unit_measure_code": item.unit_measure_code,
+            "standard_code": item.standard_code,
+            "taxes": [{"code": item.tax_code, "rate": f"{item.tax_rate:.2f}"}],
+        })
+    return payload_items
+
+
+def _build_payment_details(invoice: Invoice) -> List[dict]:
+    # Por defecto un único pago de contado en efectivo por el total
+    return [
+        {
+            "payment_form": "1",
+            "payment_method_code": "10",
+            "reference_code": invoice.reference_code,
+            "amount": f"{invoice.total_amount:.2f}",
+        }
+    ]
+
+
+def _build_factus_payload(invoice: Invoice, client: Client) -> dict:
+    payload = {
+        "reference_code": invoice.reference_code,
+        "document": invoice.document or "01",
+        "operation_type": invoice.operation_type or "10",
+        "send_email": False,
+        "observation": invoice.observation,
+        "payment_details": _build_payment_details(invoice),
+        "customer": _build_customer_payload(client),
+        "items": _build_items_payload(invoice.items),
+    }
+
+    # Solo incluir numbering_range_id si es mayor a 0
+    if invoice.numbering_range_id and invoice.numbering_range_id > 0:
+        payload["numbering_range_id"] = invoice.numbering_range_id
+
+    return payload
+
+
+def _determine_status(response_data: dict) -> str:
+    if response_data.get("is_validated"):
+        return "validated"
+    errors = response_data.get("errors", {})
+    # Si hay errores críticos, marcar como rechazada
+    if errors:
+        return "rejected"
+    return "pending"
+
+
 @router.post("/{invoice_id}/emit", response_model=InvoiceEmitResponse)
 def emit_invoice(
     invoice_id: str,
@@ -142,63 +225,55 @@ def emit_invoice(
             detail="Invoice not found",
         )
 
-    if invoice.status != "draft":
+    if invoice.status not in ("draft", "pending", "rejected"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invoice has already been emitted",
         )
 
-    factus = get_factus_service()
-    auth = factus.authenticate(
-        settings.factus_client_id,
-        settings.factus_client_secret,
-    )
-
     client = db.get(Client, invoice.client_id)
-    items = []
-    for item in invoice.items:
-        items.append(
-            {
-                "code_reference": item.code_reference,
-                "name": item.name,
-                "quantity": str(item.quantity),
-                "discount_rate": str(item.discount_rate),
-                "price": str(item.price),
-                "unit_measure_code": item.unit_measure_code,
-                "standard_code": item.standard_code,
-                "taxes": [{"code": item.tax_code, "rate": str(item.tax_rate)}],
-            }
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Client not found",
         )
 
-    payload = {
-        "reference_code": invoice.reference_code,
-        "document": invoice.document,
-        "numbering_range_id": invoice.numbering_range_id,
-        "operation_type": invoice.operation_type,
-        "observation": invoice.observation,
-        "customer": {
-            "identification_document_code": client.identification_document_code,
-            "identification": client.identification,
-            "company": client.company,
-            "trade_name": client.trade_name,
-            "address": client.address,
-            "email": client.email,
-            "phone": client.phone,
-            "legal_organization_code": client.legal_organization_code,
-            "tribute_code": client.tribute_code,
-            "municipality_code": client.municipality_code,
-        },
-        "items": items,
-    }
+    factus = get_factus_service()
+    payload = _build_factus_payload(invoice, client)
 
-    response = factus.validate_invoice(auth["access_token"], payload)
+    try:
+        response = factus.validate_invoice(payload)
+    except FactusAuthError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Factus authentication failed: {str(exc)}",
+        )
+    except FactusAPIError as exc:
+        # Manejar error 409: factura pendiente por enviar a la DIAN
+        if exc.status_code == 409:
+            try:
+                factus.delete_pending_invoice(invoice.reference_code)
+                response = factus.validate_invoice(payload)
+            except FactusAPIError as exc2:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"Factus validation failed after retry: {exc2.response_body or str(exc2)}",
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Factus validation failed: {exc.response_body or str(exc)}",
+            )
+
     data = response.get("data", {})
 
-    invoice.status = "validated" if data.get("status") == "validated" else "rejected"
+    invoice.status = _determine_status(data)
     invoice.factus_number = data.get("number")
     invoice.cufe = data.get("cufe")
-    invoice.pdf_url = data.get("pdf_url")
-    invoice.xml_url = data.get("xml_url")
+
+    links = data.get("links", {})
+    invoice.pdf_url = links.get("public_url")
+    invoice.xml_url = None  # Se puede obtener con download_xml si es necesario
     invoice.factus_response = str(data)
 
     db.add(invoice)
@@ -208,5 +283,39 @@ def emit_invoice(
     return InvoiceEmitResponse(
         invoice=invoice,
         factus_status=invoice.status,
-        message="Invoice emitted successfully (mock mode)",
+        message=f"Invoice emitted with status: {invoice.status}",
     )
+
+
+@router.get("/{invoice_id}/download-xml")
+def download_xml(
+    invoice_id: str,
+    db: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user),
+):
+    invoice = db.get(Invoice, invoice_id)
+    if not invoice or invoice.user_id != current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found",
+        )
+
+    if not invoice.factus_number:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invoice has not been emitted yet",
+        )
+
+    factus = get_factus_service()
+    try:
+        xml_content = factus.download_xml(invoice.factus_number)
+    except FactusAPIError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Could not download XML: {exc.response_body or str(exc)}",
+        )
+
+    return {
+        "xml_base64": xml_content.decode("utf-8"),
+        "filename": f"{invoice.factus_number}.xml",
+    }

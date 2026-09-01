@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     database_url: str
 
     factus_base_url: str = "https://api-sandbox.factus.com.co"
+    factus_username: str = ""
+    factus_password: str = ""
     factus_client_id: str = ""
     factus_client_secret: str = ""
 

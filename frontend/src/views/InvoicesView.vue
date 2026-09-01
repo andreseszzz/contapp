@@ -25,14 +25,20 @@ async function emitInvoice(id) {
     await api.post(`/invoices/${id}/emit`)
     await loadInvoices()
   } catch (err) {
-    alert(err.response?.data?.detail || t('common.error'))
+    const detail = err.response?.data?.detail || t('common.error')
+    alert(detail)
   }
 }
 
 function statusClass(status) {
   if (status === 'validated') return 'text-success'
   if (status === 'rejected') return 'text-danger'
-  return 'text-warning'
+  if (status === 'pending') return 'text-warning'
+  return 'text-secondary'
+}
+
+function canEmit(status) {
+  return status === 'draft' || status === 'pending' || status === 'rejected'
 }
 </script>
 
@@ -62,18 +68,32 @@ function statusClass(status) {
           <td class="px-4 py-3">{{ invoice.reference_code }}</td>
           <td class="px-4 py-3">{{ invoice.client_id }}</td>
           <td class="px-4 py-3 font-medium" :class="statusClass(invoice.status)">
-            {{ t(`invoices.${invoice.status}`) }}
+            {{ t(`invoices.${invoice.status}`, { default: invoice.status }) }}
           </td>
           <td class="px-4 py-3">${{ invoice.total_amount.toLocaleString() }}</td>
           <td class="px-4 py-3">
             <button
-              v-if="invoice.status === 'draft'"
-              class="text-primary hover:underline"
+              v-if="canEmit(invoice.status)"
+              class="text-primary hover:underline mr-2"
               @click="emitInvoice(invoice.id)"
             >
               {{ t('invoices.emit') }}
             </button>
-            <a v-if="invoice.pdf_url" :href="invoice.pdf_url" target="_blank" class="text-primary hover:underline ml-2">PDF</a>
+            <a
+              v-if="invoice.pdf_url"
+              :href="invoice.pdf_url"
+              target="_blank"
+              class="text-primary hover:underline mr-2"
+            >
+              PDF
+            </a>
+            <span
+              v-if="invoice.factus_number"
+              class="text-xs text-muted"
+              title="Número DIAN"
+            >
+              {{ invoice.factus_number }}
+            </span>
           </td>
         </tr>
       </tbody>

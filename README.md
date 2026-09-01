@@ -301,11 +301,42 @@ Para usar la API real de Factus:
 
 ```env
 FACTUS_BASE_URL=https://api-sandbox.factus.com.co
+FACTUS_USERNAME=tu-usuario-factus
+FACTUS_PASSWORD=tu-password-factus
 FACTUS_CLIENT_ID=tu-client-id
 FACTUS_CLIENT_SECRET=tu-client-secret
 ```
 
-3. Modifica `app/services/factus_service.py` para usar `httpx` y los endpoints reales de Factus.
+3. El backend usará `httpx` para conectarse a los endpoints reales de Factus.
+
+### Flujo de emisión real
+
+```
+Contapp Backend
+   │
+   ├──▶ POST /oauth/token (autenticación OAuth2 password)
+   │
+   └──▶ POST /v2/bills/validate (envía factura a Factus/DIAN)
+            │
+            ▼
+        Respuesta con número, CUFE, QR y URL pública del PDF
+            │
+            ▼
+   Almacenar en PostgreSQL (estado, CUFE, PDF, XML, respuesta cruda)
+```
+
+### Estados de factura tras emisión
+
+| Estado | Significado |
+| --- | --- |
+| `validated` | Factura validada exitosamente ante la DIAN (`is_validated: true`). |
+| `pending` | Factura registrada en Factus, aún en proceso de validación DIAN. |
+| `rejected` | Factura rechazada por errores de validación. Requiere corrección. |
+| `draft` | Factura creada en Contapp pero no enviada a Factus. |
+
+### Envío de correos
+
+El envío de correos al adquiriente es gestionado por el propio Contapp, no por Factus. Por eso en cada emisión se envía `send_email: false`, y las URLs públicas del PDF se usan para notificaciones propias.
 
 ---
 
@@ -330,8 +361,8 @@ npm run test
 
 ## Roadmap y mejoras futuras
 
-- [ ] Conectar emisión de facturas con la API real de Factus.
-- [ ] Descargar XML/PDF desde URLs de Factus.
+- [x] Conectar emisión de facturas con la API real de Factus.
+- [x] Obtener URLs públicas de PDF desde Factus.
 - [ ] Recepción de facturas de compra.
 - [ ] Notas crédito y débito.
 - [ ] Dashboard con gráficos de ventas.
