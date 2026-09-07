@@ -31,9 +31,10 @@ def upgrade() -> None:
     for table in tables:
         op.execute(f"ALTER TABLE public.{table} ENABLE ROW LEVEL SECURITY;")
 
-    # Drop any pre-existing permissive default policies to avoid conflicts
-    for table in tables:
-        op.execute(f"ALTER TABLE public.{table} FORCE ROW LEVEL SECURITY;")
+    # The backend FastAPI service connects as the postgres role (table owner),
+    # which bypasses RLS by default. We intentionally do NOT use FORCE ROW LEVEL
+    # SECURITY so that the backend can manage all rows while direct Supabase
+    # REST/PostgREST access (anon/authenticated roles) is still restricted.
 
     # Helper function to map a Supabase Auth uid to our internal users.id
     op.execute("""
@@ -49,7 +50,8 @@ def upgrade() -> None:
         $$;
     """)
 
-    # 1. users table: users can only see/update their own profile
+    # 1. users table: users can only see/update their own profile.
+    # The backend service role (postgres) bypasses RLS as table owner.
     op.execute("""
         CREATE POLICY users_select_own
         ON public.users

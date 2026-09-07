@@ -34,7 +34,7 @@ class InvoiceCreate(BaseModel):
     client_id: str
     reference_code: str
     document: str = "01"
-    numbering_range_id: int = 1
+    numbering_range_id: int = 389
     operation_type: str = "10"
     observation: Optional[str] = None
     items: List[InvoiceItemCreate]

@@ -38,7 +38,7 @@ onMounted(async () => {
 <template>
   <div>
     <h1 class="text-2xl font-bold mb-2">{{ t('dashboard.title') }}</h1>
-    <p class="text-muted mb-6">{{ t('dashboard.welcome') }}, {{ auth.user?.email }}</p>
+    <p class="text-muted mb-6">{{ t('dashboard.welcome') }}, {{ auth.user?.full_name || auth.user?.email }}</p>
 
     <div v-if="loading" class="text-muted">{{ t('common.loading') }}</div>
 
