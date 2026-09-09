@@ -31,7 +31,16 @@
     "totalTax": "Impuestos totales",
     "invoices": "Facturas",
     "clients": "Clientes",
-    "products": "Productos"
+    "products": "Productos",
+    "statusFilter": "Estado de facturas",
+    "all": "Todas",
+    "draft": "Borrador",
+    "pending": "Pendiente",
+    "validated": "Validada",
+    "rejected": "Rechazada",
+    "salesOverTime": "Ventas e impuestos por mes",
+    "invoicesByStatus": "Facturas por estado",
+    "noData": "Sin datos para mostrar"
   },
   "clients": {
     "title": "Clientes",

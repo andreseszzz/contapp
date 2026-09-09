@@ -273,6 +273,8 @@ contapp/
 | GET | `/api/reports/sales-summary` | Resumen de ventas |
 | GET | `/api/reports/taxes` | Impuestos IVA de facturas validadas |
 | GET | `/api/reports/accounts-receivable` | Cuentas por cobrar |
+| GET | `/api/reports/monthly-sales?status=validated\|pending\|rejected\|draft\|all` | Ventas e impuestos agrupados por mes |
+| GET | `/api/reports/sales-by-status` | Conteo de facturas por estado |
 
 ---
 
@@ -367,9 +369,9 @@ npm run test
 - [x] Obtener URLs públicas de PDF desde Factus.
 - [ ] Recepción de facturas de compra.
 - [ ] Notas crédito y débito.
-- [ ] Dashboard con gráficos de ventas.
+- [x] Dashboard con gráficos de ventas (ApexCharts).
 - [ ] Soporte multi-tenant (varias empresas por usuario).
-- [ ] Tests de integración con TestClient de FastAPI.
+- [x] Tests de integración con TestClient de FastAPI.
 - [ ] CI/CD con GitHub Actions.
 
 ---

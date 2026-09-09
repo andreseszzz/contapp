@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, HTTPException, status as http_status
+from sqlalchemy import func as sa_func
 from sqlmodel import Session, select, func
-from typing import Optional
+from typing import Optional, Literal
 from datetime import date
 from app.core.database import get_session
 from app.core.security import get_current_user
@@ -78,3 +79,90 @@ def accounts_receivable(
         "invoice_count": len(invoices),
         "currency": "COP",
     }
+
+
+VALID_STATUSES = {"draft", "pending", "validated", "rejected", "all"}
+
+
+@router.get("/monthly-sales")
+def monthly_sales(
+    status: str = Query(default="validated", description="Filter by invoice status: draft, pending, validated, rejected, or all"),
+    db: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Return total sales and taxes grouped by month for the authenticated user.
+    The `status` query parameter accepts draft, pending, validated, rejected, or all.
+    """
+    if status not in VALID_STATUSES:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid status filter. Allowed values: {', '.join(sorted(VALID_STATUSES))}",
+        )
+
+    month_expr = sa_func.date_trunc("month", Invoice.created_at).label("month")
+    statement = (
+        select(
+            month_expr,
+            sa_func.coalesce(sa_func.sum(Invoice.total_amount), 0).label("total_sales"),
+            sa_func.coalesce(sa_func.sum(Invoice.total_tax), 0).label("total_tax"),
+            sa_func.count(Invoice.id).label("invoice_count"),
+        )
+        .where(Invoice.user_id == current_user["id"])
+        .group_by(month_expr)
+        .order_by(month_expr)
+    )
+
+    if status != "all":
+        statement = statement.where(Invoice.status == status)
+
+    results = db.exec(statement).all()
+
+    labels = []
+    sales = []
+    taxes = []
+    counts = []
+    for row in results:
+        month_dt = row.month
+        # date_trunc returns a datetime; format as YYYY-MM
+        labels.append(month_dt.strftime("%Y-%m"))
+        sales.append(float(row.total_sales))
+        taxes.append(float(row.total_tax))
+        counts.append(int(row.invoice_count))
+
+    return {
+        "labels": labels,
+        "sales": sales,
+        "taxes": taxes,
+        "invoice_count": counts,
+        "currency": "COP",
+        "status_filter": status,
+    }
+
+
+@router.get("/sales-by-status")
+def sales_by_status(
+    db: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Return the count of invoices grouped by status for the authenticated user.
+    """
+    statement = (
+        select(
+            Invoice.status,
+            sa_func.count(Invoice.id).label("count"),
+        )
+        .where(Invoice.user_id == current_user["id"])
+        .group_by(Invoice.status)
+    )
+
+    results = db.exec(statement).all()
+
+    # Ensure all known statuses appear in the response, even with zero count.
+    counts = {status: 0 for status in ("draft", "pending", "validated", "rejected")}
+    for row in results:
+        if row.status in counts:
+            counts[row.status] = int(row.count)
+
+    return counts
