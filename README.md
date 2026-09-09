@@ -378,4 +378,4 @@ npm run test
 
 ## Licencia
 
-MIT © 2026 Contapp
+Propio © 2026 Contapp
